@@ -1,0 +1,29 @@
+# Newman Docker Image
+
+<!-- This repository contains a Dockerfile for creating a Docker image that uses Newman, the command-line collection runner for Postman. This image is built in two stages to ensure a lightweight final image while including additional features such as a custom reporter.
+
+## Summary -->
+
+I used a multi-stage build process to build the image:
+
+1. **Build Stage**:
+   - Base image: `postman/newman:5.3-alpine` with builder label.
+   - Updates the Alpine package manager and upgrades existing packages.
+   - Installs additional packages such as `curl`, `zip`, and `ping`.
+   - Installs the `newman-reporter-csvallinone` package globally.
+   - Cleans up the npm cache and removes unnecessary files to reduce image size.
+
+2. **Final Stage**:
+   - Again uses the `postman/newman:5.3-alpine` image as the base.
+   - Copies the installed Node modules from the builder stage to the final image.
+   - Copies a custom `resolv.conf` file to configure DNS settings.
+   - Sets the `NODE_PATH` environment variable to include globally installed Node modules.
+   - Sets the working directory to `/etc/newman`.
+   - Configures the entry point to the Newman command, allowing users to run Newman commands directly when the container is started.
+
+## Usage
+
+To build the Docker image, run the following command in the directory containing the Dockerfile:
+
+```bash
+docker build -t newman-image .

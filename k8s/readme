@@ -1,0 +1,268 @@
+# Kuberentes
+
+### We have 2 stages:
+
+- `First`   `Create the k8s cluster itself.`
+- `Second`  `Deploy juice shop app on the cluster and access it.`
+
+
+## Create the k8s cluster
+
+### Our cluster is consists of 4 nodes
+
+  - `NTP server`
+  - `Rancher controller` 
+  - `Master`
+  - `Worker`
+
+- `I used rancher rke to create the cluster.`
+
+### Steps
+
+### 1 - Setting up NTP server between cluster nodes.
+
+- `Setting up NTP in the cluster is essential for maintaining system stability, accurate event management, and ensuring secure communication among components.`
+
+
+
+  A) `Install the NTP on the server`
+
+  ![1](https://github.com/user-attachments/assets/7827c940-1f0a-412b-ba9c-6fde2bc8c720)
+
+
+
+  B) `Configure all cluster nodes to synch from the NTP server`
+
+
+
+    `To do that : `
+
+    ```
+    vi /etc/systemd/timesyncd.conf
+ 
+    [Time]
+    NTP=192.168.1.100
+    FallbackNTP=192.168.1.100
+   ```
+
+    ![2](https://github.com/user-attachments/assets/52d1b407-eec9-4102-8090-8232a3d93a88)
+
+    ![3](https://github.com/user-attachments/assets/88da4e23-bab0-491b-9cf3-65239dabf721)
+
+    ![4](https://github.com/user-attachments/assets/6c3dac87-f898-4062-90a4-424c180c9a98)
+
+
+`Now our nodes is time synched` 
+
+
+
+### 2 - Install container runtime (Docker) on all nodes.
+
+
+  ```
+  It is necessary to enable k8s to insatll Kubernetes cluster components on the appropriate nodes (master nodes) for the successful operation of the cluster and 
+  it also enables k8s (worker nodes)to effectively manage containerized applications. 
+  ```
+
+  ```
+  sudo apt-get update -y 
+  sudo apt-get install ca-certificates curl gnupg  net-tools iftop htop ncdu -y
+  sudo install -m 0755 -d /etc/apt/keyrings
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+  sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+  echo \
+    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+    $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+    sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+  sudo apt-get update -y
+  sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+  ```
+
+`Now all our nodes have the container runtime (docker).`
+
+
+
+### 3- Install the rancher controller 
+
+
+  `Rancher simplifies cluster creation, allows for centralized control over multiple clusters, provides essential monitoring and logging tools.` 
+
+
+![5](https://github.com/user-attachments/assets/4ee2c56a-0279-4380-ad04-9034ebe1c12c)
+
+
+![6](https://github.com/user-attachments/assets/785e7c55-de4d-4cc1-b9a7-f502b52d3b1f)
+
+
+![10](https://github.com/user-attachments/assets/6fe63009-e3b2-4c29-ad58-57ccdb769511)
+
+
+![11](https://github.com/user-attachments/assets/dd474d1b-3bd2-45f0-9e9e-43aa2e2f8b3e)
+
+
+`Now we have the rancher controller and ready to create the cluster`
+
+
+
+### 4 - Create our cluster 
+
+
+  `Using rancher rke , I creted the cluster with one master node and one worker node.`
+
+
+![12](https://github.com/user-attachments/assets/42e1bdf3-ce0f-4c1b-9010-757653aae2e1)
+
+![14](https://github.com/user-attachments/assets/5bd5d22a-9a04-44f7-af95-7f341aa8e935)
+
+![15](https://github.com/user-attachments/assets/49b4e97c-012f-4dbe-904e-7e2bbf93e7ca)
+
+![16](https://github.com/user-attachments/assets/5d64fa7a-c63c-4091-81f0-fee3e01de53c)
+
+![17](https://github.com/user-attachments/assets/04a5c524-6339-4e1e-8223-c17d30c9fe93)
+
+![18](https://github.com/user-attachments/assets/44e02e6e-2149-40f6-a04e-7fb04b653ceb)
+
+
+`Now our cluster is ready to deploy juice shop app on it`
+
+
+### ADDITIONAL Enhancements
+
+
+```
+We can enhanche our cluster creation by using extra things like:
+
+`DNS`               : Facilite internal communication between nodes by its domain names instead ips.
+
+`Private registry`  : To secure and control storage of container images if we are in air-gap cluster.
+
+`Ceph`              : Provide dynamic provisioning of persistent volumes across nodes in the cluster, ensuring data durability and redundancy.
+
+`Nginx proxy`       : Reverse proxy and load balancer between nodes acting as a gateway to the k8s cluster.
+
+`Squid`             : Forward proxy for nodes if i want nodes to access the internet.
+```
+
+## Deploy juice shop app on the cluster 
+
+
+### 1 - Create and deploy nginx ingress controller on our cluster to enable us to expose our applications outside the cluster
+
+`I used helm to install it: `
+
+A) `Add nginx ingress repo to my helm repo.`
+
+```
+  helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+```
+
+![19](https://github.com/user-attachments/assets/b3ab3d92-5f55-4532-9e24-fda7d601e36a)  
+
+
+B) `Render the Kubernetes templates from the chart into static Kubernetes manifest (YAML) and output them, instead of installing the chart to the cluster directly.` 
+
+```
+  helm template ingress-nginx ingress-nginx \
+  --repo https://kubernetes.github.io/ingress-nginx \
+  --version 4.0.18 \
+  --namespace ingress-nginx \
+  > ./kubernetes/ingress/controller/nginx/manifests/nginx-ingress.1.1.2.yaml
+```
+
+![20](https://github.com/user-attachments/assets/3194d9d3-c855-427c-add6-58d54c82be6e)
+
+
+C) `Change controller service from LoadBalancer to NodePort as we are in on prem environment and dont have load balancer.`
+
+
+![21](https://github.com/user-attachments/assets/840f5b27-20ad-450f-8e95-fa68bf24bad1)
+
+
+D) `Deploy the Ingress controller`
+
+```
+kubectl create namespace ingress-nginx
+kubectl apply -f ./manifests/nginx-ingress.1.1.2.yaml
+```
+
+![22](https://github.com/user-attachments/assets/6bceae24-1df3-4619-b7ee-adb503403563)
+
+
+![23](https://github.com/user-attachments/assets/865d55e4-86da-4ba2-8de9-5c614d8ed18d)
+
+
+
+### 2 - Deploy the juice shop manfists file on the cluster 
+
+
+
+
+![24](https://github.com/user-attachments/assets/297fd7f7-cf17-421d-8967-d643dc04874a)
+
+![25](https://github.com/user-attachments/assets/1cdc170f-0a08-4d30-a082-5ffb0a667f23)
+
+
+
+
+### 3- Create ingress rule for our app and crete a SSL certificate for it 
+
+
+
+![26](https://github.com/user-attachments/assets/e113f622-c9a8-41d6-bc5d-4e25fe66a306)
+
+![27](https://github.com/user-attachments/assets/12f3a510-4704-4025-b0d4-68be3805a731)
+
+
+
+
+### 4- Put worker node ip in my /etc/hosts (we can use nginx proxy insted of that)
+
+
+
+![28](https://github.com/user-attachments/assets/f98e8809-c246-4819-b266-99d141ab8054)
+
+
+
+### 5- Now we are ready to acess juice shop app from the browser
+
+
+
+![29](https://github.com/user-attachments/assets/834a505e-f7e5-4b97-9aab-1a5415324534)
+
+![30](https://github.com/user-attachments/assets/e81a0765-b00f-4e7d-be42-8cecfb223e90)
+
+
+
+
+## Monitoring:
+
+## Prometheus:
+
+  `Description`  : `A powerful open-source monitoring and alerting toolkit widely used for Kubernetes environments.`
+  `Functionality`: `Collects metrics from configured targets at specified intervals, evaluates rule expressions, and can trigger alerts based on those rules.`
+  `Integration`  : `Can scrape metrics directly from the Juice Shop application if it exposes Prometheus-compatible metrics (or through an exporter).`
+
+## Grafana:
+
+  `Description`  : `An open-source visualization tool that integrates well with Prometheus.`
+  `Functionality`: `Provides a user-friendly interface to create dashboards and visualize metrics collected by Prometheus.`
+  `Setup`        : `Dashboards can be customized to monitor application performance, response times, error rates, and other key metrics.`
+
+## ELK Stack (Elasticsearch, Logstash, Kibana):
+
+  `Description`  : `A powerful log aggregation and visualization stack.`
+  `Functionality`: `Collects logs from Juice Shop and Kubernetes, processes them with Logstash, and stores them in Elasticsearch for querying.`
+  `Visualization`: `Kibana allows for real-time log monitoring and troubleshooting.`
+
+### Service Mesh:
+
+  `Example`      : `Istio or Linkerd can provide additional observability features, such as tracing and more granular monitoring of service-to-service communication.`
+  `Functionality`: `Integrates with Prometheus and Grafana for enhanced metrics collection and monitoring capabilities.`
+
+
+
+
+
+
+

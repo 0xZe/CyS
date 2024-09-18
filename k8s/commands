@@ -1,0 +1,171 @@
+nmcli connection add type ethernet ifname eth0 con-name static-connection ipv4.addresses 192.168.1.100/24 ipv4.gateway 192.168.1.1 ipv4.dns 8.8.8.8 ipv4.method manual
+
+
+
+
+
+nmcli connection add con-name k8s type ethernet ifname enp0s3 ipv4.addresses 192.168.1.101/24 ipv4.gateway 192.168.1.1 ipv4.dns 8.8.8.8 ipv4.method manual
+
+
+
+wlp0s20f3
+
+
+nmcli con modify ze ipv4.addresses 192.168.1.100/24
+nmcli con modify ze ipv4.gateway 192.168.1.1
+nmcli con modify ze ipv4.dns "8.8.8.8 8.8.4.4"
+nmcli con modify ze ipv4.method manual
+
+
+nmcli con down ze && nmcli con up ze
+
+
+Rancher       IN      A       192.168.1.100
+ntp           IN      A       192.168.1.103
+master        IN      A       192.168.1.101
+worker        IN      A       192.168.1.102
+
+
+
+network:
+  version: 2
+  ethernets:
+    enp0s3:
+      addresses:
+      - 192.168.1.101/24
+      gateway4: 192.168.1.1
+      nameservers:
+        addresses:
+        - 192.168.1.103
+        search: [ze.local]
+      dhcp4: false
+
+
+  sudo apt-get install tzdata
+   sudo dpkg-reconfigure tzdata
+   sudo apt-get remove --purge tzdata
+   sudo apt-get autoremove
+  sudo apt-get clean
+  sudo apt-get update
+  sudo apt-get install tzdata
+
+
+
+
+  docker run -d --name rancher-server  -v /home/user/rancher-volume:/var/lib/rancher --restart=unless-stopped -p 80:80 -p 443:443 --privileged rancher/rancher
+
+
+1Yo10BQ7OtOHaPVa
+
+
+
+docker rm -f $(docker ps -qa)
+docker volume rm $(docker volume ls -q)
+
+
+rm -rf /etc/ceph \
+       /etc/cni \
+       /etc/kubernetes \
+       /etc/rancher \
+       /opt/cni \
+       /opt/rke \
+       /run/secrets/kubernetes.io \
+       /run/calico \
+       /run/flannel \
+       /var/lib/calico \
+       /var/lib/etcd \
+       /var/lib/cni \
+       /var/lib/kubelet \
+       /var/lib/rancher\
+       /var/log/containers \
+       /var/log/kube-audit \
+       /var/log/pods \
+       /var/run/calico
+
+
+docker rmi -f $(docker images -q)
+
+
+
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+
+
+CHART_VERSION="4.4.0"
+APP_VERSION="1.5.1"
+v1.11.0
+
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+
+
+mkdir ./nginx-ingress-manifests/
+
+helm template ingress-nginx ingress-nginx \
+--repo https://kubernetes.github.io/ingress-nginx \
+--version 4.0.18 \
+--namespace ingress-nginx \
+> ./nginx-ingress-manifests/nginx-ingress.1.1.2.yaml
+
+
+
+
+kubectl create namespace ingress-nginx
+kubectl apply -f ./nginx-ingress-manifests/nginx-ingress.1.1.2.yaml
+
+
+
+openssl req -x509 -sha256 -nodes -days 365 -newkey rsa:2048 -keyout tls.key -out tls.crt -subj "/CN=juice-shop.local/O=local"
+
+kubectl create secret tls tls-secret --key tls.key --crt tls.cert -n juice-shop
+
+
+
+
+Prometheus:
+
+  Description: A powerful open-source monitoring and alerting toolkit widely used for Kubernetes environments.
+  Functionality: Collects metrics from configured targets at specified intervals, evaluates rule expressions, and can trigger alerts based on those rules.
+  Integration: Can scrape metrics directly from the Juice Shop application if it exposes Prometheus-compatible metrics (or through an exporter).
+
+Grafana:
+
+  Description: An open-source visualization tool that integrates well with Prometheus.
+  Functionality: Provides a user-friendly interface to create dashboards and visualize metrics collected by Prometheus.
+  Setup: Dashboards can be customized to monitor application performance, response times, error rates, and other key metrics.
+
+ELK Stack (Elasticsearch, Logstash, Kibana):
+
+  Description: A powerful log aggregation and visualization stack.
+  Functionality: Collects logs from Juice Shop and Kubernetes, processes them with Logstash, and stores them in Elasticsearch for querying.
+  Visualization: Kibana allows for real-time log monitoring and troubleshooting.
+
+Service Mesh:
+
+  Example: Istio or Linkerd can provide additional observability features, such as tracing and more granular monitoring of service-to-service communication.
+  Functionality: Integrates with Prometheus and Grafana for enhanced metrics collection and monitoring capabilities.
+
+
+
+
+
+
+
+
+
+
+
+  install docker 
+
+  ntp 
+
+  dns 
+
+  private registry
+
+
+  build rancher 
+
+  build cluster 
+
+  deploy the app 
+
+

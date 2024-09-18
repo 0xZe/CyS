@@ -1,0 +1,28 @@
+# User Data Processor
+
+This Bash script processes user data from text file  and performs the following tasks:
+
+- Trims leading and trailing spaces from `name`, `email`, and `id` fields.
+- Validates that the `id` is numeric and not empty.
+- Checks that the email is a valid FQDN (Fully Qualified Domain Name) email format.
+- Determines if the `id` is even or odd and prints an appropriate message.
+- Logs warnings for invalid `id` or `email` entries without halting the script.
+
+## Features
+
+1. **Input File**:  
+   The script reads data from a file (`users.txt` by default), where each line contains a `name`, `email`, and `id` separated by commas.
+
+2. **ID Validation**:
+   - The script checks whether the `id` is numeric and non-empty.
+   - If the `id` is missing or not a valid number, a warning is printed and the entry is skipped, No further processing is done for this user (no email check, no even/odd ID check).
+
+3. **Email Validation**:
+   - After the script ensures that the `id` is valid, It ensures that the email follows a valid FQDN format using a regular expression.
+   - If the `email` is unvalid, a warning is printed and the entry is skipped. No further processing is done for this user (no even/odd ID check).
+
+4. **Even/Odd Check**:
+   - For valid entries(ID and Email), the script checks whether the `id` is even or odd and prints a corresponding message.
+
+5. **Warnings**:
+   - Any invalid `id` or `email` entry triggers a warning, but the script continues processing the remaining lines in the input file.

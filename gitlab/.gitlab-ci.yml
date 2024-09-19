@@ -1,0 +1,124 @@
+stages:
+  - Build
+  - Test
+  - Scan
+  - Prepare_docker_image
+  - Deploy
+
+variables:
+
+  DOCKER_IMAGE_NAME: '${CI_REGISTRY_IMAGE}/cy-commerce:${CI_COMMIT_REF_NAME}'
+  SSH_HOST: '192.168.1.100'
+  DOCKER_RUN_COMMAND: 'docker run -d -p 8000:8000 --name cy-commerce ${DOCKER_IMAGE_NAME}'
+ 
+    
+.before_script: &before-script 
+#   - pip install --upgrade django-allauth
+#   - pip install django-allauth
+   - pip install --upgrade pip
+   - pip install -r requirements.txt
+
+
+build_src-code:
+  stage: Build
+  tags:
+    - docker2
+  image: python:3.8
+  before_script:
+    - *before-script
+  script:
+#    - pip install django-allauth
+#    - pip install --upgrade django-allauth
+    - python manage.py --help
+
+
+unit_test:
+  stage: Test
+  tags:
+    - docker2
+  image: python:3.8
+  before_script:
+    - *before-script
+  script:
+    - rm -rf .pytest_cache
+    - pip install pytest-django
+    - pytest
+
+
+
+dependencies_scan:
+  stage: Scan
+  tags:
+    - docker2
+  image: python:3.8
+  before_script:
+    - *before-script
+  script:
+    - pip install safety
+    # Run safety check and export the report to a file
+    - safety check --full-report > safety_report.txt || echo "$(jq '. | length' safety_report.json) vulnerabilities found. Check the full report for details."
+  artifacts:
+    paths:
+      - safety_report.txt
+    expire_in: 1 week
+  allow_failure: true
+
+
+# docker_image_prepare:
+#   stage: Prepare_docker_image
+#   tags:
+#     - shell2
+#   script:
+#     - echo "${DOCKER_IMAGE_NAME}"
+#     - echo "Preparing to build Docker image: ${DOCKER_IMAGE_NAME}"
+#     - docker build -t  "${DOCKER_IMAGE_NAME}" .
+#   after_script:
+#     - echo "Cleaning up unused Docker images..."
+#     - docker system prune -f --filter "until=12h" || true
+#     - echo "Docker cleanup completed."
+
+docker_image_prepare:
+  stage: Prepare_docker_image
+  tags:
+    - shell2
+  script:
+    - echo "${DOCKER_IMAGE_NAME}"
+    - docker build -t  "${DOCKER_IMAGE_NAME}" .
+  after_script:
+    - echo "Cleaning up unused Docker images..."
+    - docker system prune -f --filter "until=12h" || true
+
+
+image_vulnerabilities_scan:
+  stage: Scan
+  tags:
+    - shell
+  script: 
+      - echo "${DOCKER_IMAGE_NAME}"
+      - docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image "${DOCKER_IMAGE_NAME}" --exit-code 1
+  allow_failure: true
+
+###
+
+
+push_image:
+  stage: Prepare_docker_image
+  tags:
+    - shell2
+  script:
+      -  docker login -u ${user} -p ${acess_token} ${CI_REGISTRY} && docker push ${DOCKER_IMAGE_NAME}
+  needs:
+    - docker_image_prepare
+    - image_vulnerabilities_scan
+ 
+
+
+Deploy:
+  stage: Deploy
+  tags:
+    - shell
+  script:
+    - ssh -o StrictHostKeyChecking=no user@${SSH_HOST} "docker login -u ${user} -p ${acess_token} ${CI_REGISTRY} && docker pull ${DOCKER_IMAGE_NAME}; docker rm -f cy-commerce ; ${DOCKER_RUN_COMMAND}"
+  needs:
+    - push_image
+

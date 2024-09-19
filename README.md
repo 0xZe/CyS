@@ -89,7 +89,7 @@
   `Rancher simplifies cluster creation, allows for centralized control over multiple clusters, provides essential monitoring and logging tools.` 
 
 
-![5](https://github.com/user-attachments/assets/4ee2c56a-0279-4380-ad04-9034ebe1c12c)
+![35](https://github.com/user-attachments/assets/7a385048-ca48-4b03-a0ff-f78840b66ef7)
 
 
 ![6](https://github.com/user-attachments/assets/785e7c55-de4d-4cc1-b9a7-f502b52d3b1f)
